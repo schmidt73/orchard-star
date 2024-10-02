@@ -43,7 +43,8 @@ def F_llh(partial_parents, F_data, bool_mask, loss_function):
     F, eta, _F_llh = fit_F(partial_parents, 
                           F_data.V[bool_mask], 
                           F_data.N[bool_mask] - F_data.V[bool_mask],
-                          F_data.omega[bool_mask], loss_function)
+                          F_data.omega[bool_mask], 
+                          loss_function)
     return F, eta, _F_llh
 
 def propose_branches(branch, F_data, branching_factor, generator):

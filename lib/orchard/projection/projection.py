@@ -66,8 +66,6 @@ def fit_F(parents, V, R, omega, loss_function):
         a 2D array of variant read probabilities across all samples for each node. Each row i, V_i, are the 
         variant read probabilities for the node at index i in the parents array, and each column
         s, V_{is}, are the variant read probabilities for node i in sample s.
-    W : ndarray
-        a 2D array of weights used to account for variance in sequencing coverage 
     Returns
     -------
     ndarray
@@ -79,10 +77,6 @@ def fit_F(parents, V, R, omega, loss_function):
     """
     global calls_to_fit_F
     calls_to_fit_F += 1
-
-    # project ppm call
-    # F2, eta = _fit_F(parents, V, R, omega)
-    # F2_llh, _, _ = calc_llh(F2, V, V + R, omega)
 
     # fastppm expects the data to be transposed
     # NOTE: the total read count matrix D_T is doubled!
@@ -115,6 +109,20 @@ def fit_F(parents, V, R, omega, loss_function):
     anc = adj_to_anc(adj)
     F = np.dot(anc, U)
     F_llh, _, _ = calc_llh(F, V, V + R, omega)
+
+    # project ppm call
+    # F2, eta = _fit_F(parents, V, R, omega)
+    # F2_llh, _, _ = calc_llh(F2, V, V + R, omega)
+    # np.set_printoptions(precision=3, suppress=True)
+    # print("F")
+    # print(F)
+    # print("F2")
+    # print(F2)
+    # print("OBS F")
+    # print((2 * V) / D)
+    # print("F_llh", F_llh.sum())
+    # print("F2_llh", F2_llh.sum())
+
     return F, U, np.sum(F_llh)
 
 def calc_llh(F, V, N, omega_v, epsilon=1e-5):
@@ -166,7 +174,7 @@ def calc_llh(F, V, N, omega_v, epsilon=1e-5):
     nlglh = np.sum(llh_per_sample) / S
     return (F_llh, llh_per_sample, nlglh)
 
-def _fit_F(parents, V, R, omega, W):
+def _fit_F(parents, V, R, omega):
     """Fits the cellular prevalence matrix F matrix one sample at a time
     
     Parameters
