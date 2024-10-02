@@ -16,7 +16,7 @@ from gumbel import gumbel_with_maximum
 from omicsdata.tree.parents import compute_partial_parents
 from actions_sampler import U_REPLACES_V
 
-def F_llh(partial_parents, F_data, bool_mask):
+def F_llh(partial_parents, F_data, bool_mask, loss_function):
     """Computes the log-likelihood of the cellular prevalence matrix F
     
     Parameters
@@ -43,7 +43,7 @@ def F_llh(partial_parents, F_data, bool_mask):
     F, eta, F_llh = fit_F(partial_parents, 
                           F_data.V[bool_mask], 
                           F_data.N[bool_mask] - F_data.V[bool_mask],
-                          F_data.omega[bool_mask])
+                          F_data.omega[bool_mask], loss_function)
     return F, eta, F_llh
 
 def propose_branches(branch, F_data, branching_factor, generator):
@@ -120,7 +120,7 @@ def sample_branches(branch, F_data, model_data, generator):
             partial_parents = compute_partial_parents(new_branch.parents())
 
             # compute the log-likelihood of the partial tree 
-            F, eta, llh = F_llh(partial_parents, F_data, bool_mask)
+            F, eta, llh = F_llh(partial_parents, F_data, bool_mask, model_data.loss_function)
 
             # set updated values (F matrix, eta matrix, negative log-likelihood) for partial tree
             new_branch.set_score(-llh)

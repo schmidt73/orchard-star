@@ -17,3 +17,4 @@ class ModelData:
     expansion_factor: int16
     force_monoprimary: bool_
     max_placements: int16
+    loss_function: str

@@ -6,6 +6,7 @@
 # cellular prevalence fitting source from Pairtree that has added documentation.
 ###########################################################################
 
+import fastppm
 import sys, os
 import numpy as np
 from scipy.stats import binom
@@ -15,6 +16,8 @@ from omicsdata.tree.parents import parents_to_adj
 from omicsdata.tree.adj import adj_to_anc
 
 MIN_VARIANCE = 1e-4
+
+calls_to_fit_F = 0
 
 def _adj_to_adjppm(adj):
     """Convert an adjacency matrix to a format projectppm is expecting
@@ -41,7 +44,7 @@ def _adj_to_adjppm(adj):
         adjppm[i, :len(row)] = row
     return adjppm, degrees
 
-def fit_F(parents, V, R, omega):
+def fit_F(parents, V, R, omega, loss_function):
     """Uses the projection algorithm to compute the F matrix
     
     Parameters
@@ -71,9 +74,47 @@ def fit_F(parents, V, R, omega):
     float
         the log binomial likelihood of the cellular prevalence matrix given the read count data
     """
-    F, eta = _fit_F(parents, V, R, omega)
+
+    global calls_to_fit_F
+    calls_to_fit_F += 1
+
+    # project ppm call
+    # F2, eta = _fit_F(parents, V, R, omega)
+    # F2_llh, _, _ = calc_llh(F2, V, V + R, omega)
+
+    # fastppm expects the data to be transposed
+    # NOTE: the total read count matrix D_T is doubled!
+    D = V + R
+    V_T = V.T
+    R_T = R.T
+    D_T = D.T
+
+    # construct adjacency list from parents for fastppm
+    adj_list = [[] for _ in range(len(parents) + 1)]
+    for i in range(len(parents)):
+        adj_list[parents[i]].append(i)
+
+    # NOTE: throw out the synthetic root node (index 0)
+    #       requires the -p/--force-monoprimary flag to be set
+    # NOTE: V_T * 2 correction is necessary since Orchard 
+    #       expects the total read count matrix to be doubled 
+    if loss_function == 'binomial':
+        res = fastppm.regress(adj_list[1:], V_T * 2, D_T, loss_function='binomial')
+    else:
+        res = fastppm.regress(adj_list[1:], V_T * 2, D_T, loss_function='l2')
+
+    # NOTE: pad the usage matrix to make it sum to 1 
+    # with the synthetic root node does not affect LLH computation
+    U = np.array(res['usage_matrix'])
+    U = np.append((1 - np.sum(U, axis=1)).reshape(-1, 1), U, axis=1)
+    U = U.T
+
+    adj = parents_to_adj(parents)
+    anc = adj_to_anc(adj)
+    F = np.dot(anc, U)
+
     F_llh, _, _ = calc_llh(F, V, V + R, omega)
-    return F, eta, np.sum(F_llh)
+    return F, U, np.sum(F_llh)
 
 def calc_llh(F, V, N, omega_v, epsilon=1e-5):
     """Computes the log-likelihood under a binomial likelihood model for the cellular prevalence

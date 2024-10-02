@@ -6,11 +6,13 @@
 import os, sys
 import numpy as np 
 
+print(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "orchard"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "orchard", "input"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "orchard", "models"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "orchard", "result"))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "orchard", "parallel"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lib", "fastppm"))
 
 from instance import run_parallel_instances
 from extract import extract_F_and_params
@@ -81,7 +83,6 @@ def run_orchard(model_type,
     )
 
 def main():
-
     # parse arguments       
     args = parse_arguments()
 
@@ -101,7 +102,9 @@ def main():
                          ignore_zero_probs=args.ignore_zero_probs,
                          expansion_factor=args.expansion_factor,
                          force_monoprimary=args.force_monoprimary,
-                         max_placements=args.max_placements),
+                         max_placements=args.max_placements,
+                         loss_function=args.loss
+                         ),
                 PathData(ssm_fn=args.ssm_fn,
                          params_fn=args.params_fn,
                          results_fn=args.results_fn),

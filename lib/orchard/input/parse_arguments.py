@@ -42,6 +42,9 @@ def parse_arguments():
                          help="Branching factor controls the number of possible parents to consider when choosing an unparented mutation to add to the tree. \
                                The time complexity of Orchard scales linearly with the branching factor.")
 
+    parser.add_argument("-l", "--loss", type=str, default="binomial", choices=["binomial", "l2"],
+                        help="The loss function to use in fastPPM.")
+
     parser.add_argument("-i", "--num-instances", type=int, default=None,
                          help="Number of parallel instances of Orchard to run.")
 
